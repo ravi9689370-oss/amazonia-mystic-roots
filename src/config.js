@@ -4,7 +4,7 @@
  *   1. Browser page title (src/main.js)
  *   2. Capacitor appName (scripts/sync-capacitor.js -> capacitor.config.json)
  */
-export const APP_NAME = 'APP_NAME_HERE';
+export const APP_NAME = 'Amazonia: The Mystic Roots';
 
 /** Unique Android application id (package name). Static on purpose. */
 export const APP_ID = 'com.mysticroots.amazonia';
