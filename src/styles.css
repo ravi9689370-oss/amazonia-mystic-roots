@@ -1,0 +1,576 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  -webkit-user-select: none;
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+body, html {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #040B08;
+  color: #F8F9FA;
+  touch-action: none;
+}
+
+#game-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1;
+}
+
+/* HUD Overlay */
+#hud-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.hud-interactive {
+  pointer-events: auto;
+}
+
+/* Top-Left Player Status & Currencies */
+.top-left-panel {
+  position: absolute;
+  top: 12px;
+  left: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.player-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(10, 28, 20, 0.85);
+  border: 1.5px solid #D4AF37;
+  border-radius: 10px;
+  padding: 6px 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+}
+
+.level-badge {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #D4AF37, #7A5908);
+  color: #040B08;
+  font-weight: 900;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #FFF2A3;
+}
+
+.bars-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 150px;
+}
+
+.player-name-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 700;
+  color: #FFF2A3;
+}
+
+.bar-bg {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.hp-fill {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #E63946, #FF6B6B);
+  transition: width 0.2s;
+}
+
+.xp-fill {
+  height: 100%;
+  width: 20%;
+  background: linear-gradient(90deg, #00D2FF, #3A7BD5);
+  transition: width 0.3s;
+}
+
+.currency-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.currency-pill {
+  background: rgba(18, 24, 31, 0.88);
+  border: 1px solid rgba(212, 175, 55, 0.6);
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.coin-text { color: #FFD700; }
+.diamond-text { color: #00FFFF; }
+
+/* Quest Banner */
+.quest-box {
+  background: rgba(10, 28, 20, 0.82);
+  border-left: 4px solid #D4AF37;
+  padding: 6px 10px;
+  border-radius: 0 8px 8px 0;
+  font-size: 11px;
+  max-width: 250px;
+}
+
+.quest-title {
+  color: #D4AF37;
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+
+/* Top-Right Minimap & Action Icons */
+.top-right-panel {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.top-buttons-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.icon-btn {
+  background: rgba(18, 24, 31, 0.88);
+  border: 1.5px solid #D4AF37;
+  color: #F8F9FA;
+  padding: 7px 11px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: transform 0.1s, background 0.2s;
+}
+
+.icon-btn:active {
+  transform: scale(0.92);
+  background: rgba(212, 175, 55, 0.3);
+}
+
+#minimap-container {
+  width: 115px;
+  height: 115px;
+  background: rgba(8, 22, 15, 0.9);
+  border: 2px solid #D4AF37;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
+}
+
+#minimap-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.minimap-label {
+  position: absolute;
+  bottom: 2px;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  font-size: 9px;
+  color: #ADB5BD;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+/* Center Reticle & Notifications */
+#crosshair {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 22px;
+  height: 22px;
+  transform: translate(-50%, -50%);
+  border: 1.5px solid rgba(0, 255, 255, 0.7);
+  border-radius: 50%;
+}
+
+#crosshair::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  background: #FF3B4B;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+#toast-banner {
+  position: absolute;
+  top: 75px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, rgba(10,28,20,0.95), rgba(28,55,40,0.95));
+  border: 1.5px solid #D4AF37;
+  color: #FFF2A3;
+  padding: 8px 20px;
+  border-radius: 25px;
+  font-size: 13px;
+  font-weight: bold;
+  opacity: 0;
+  transition: opacity 0.3s;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.7);
+  max-width: 86vw;
+}
+
+/* Left Controls: Virtual Joystick & Sprint */
+#joystick-zone {
+  position: absolute;
+  bottom: 28px;
+  left: 32px;
+  width: 125px;
+  height: 125px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(212, 175, 55, 0.5);
+}
+
+#joystick-knob {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, #D4AF37, #8A640F);
+  box-shadow: 0 0 12px rgba(212, 175, 55, 0.8);
+}
+
+#btn-sprint {
+  position: absolute;
+  bottom: 168px;
+  left: 65px;
+  width: 58px;
+  height: 40px;
+  border-radius: 20px;
+  background: rgba(18, 24, 31, 0.85);
+  border: 1.5px solid #00FFFF;
+  color: #00FFFF;
+  font-weight: bold;
+  font-size: 11px;
+}
+
+#btn-sprint.active {
+  background: #00FFFF;
+  color: #040B08;
+  box-shadow: 0 0 15px #00FFFF;
+}
+
+/* Bottom Center: Potli Inventory & Weapon Switch */
+.bottom-center-bar {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.potli-btn {
+  background: radial-gradient(circle, #5A3A18, #2A1808);
+  border: 2px solid #D4AF37;
+  color: #FFF2A3;
+  padding: 10px 16px;
+  border-radius: 14px;
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+}
+
+.weapon-slot {
+  background: rgba(18, 24, 31, 0.9);
+  border: 2px solid #00FFFF;
+  color: #F8F9FA;
+  padding: 8px 14px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  text-align: center;
+}
+
+.weapon-sub {
+  display: block;
+  font-size: 10px;
+  color: #00FFFF;
+}
+
+/* Right Controls: Mobile Combat Cluster */
+.right-combat-cluster {
+  position: absolute;
+  bottom: 20px;
+  right: 25px;
+  width: 210px;
+  height: 190px;
+}
+
+.combat-btn {
+  position: absolute;
+  border-radius: 50%;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.08s;
+}
+
+.combat-btn:active {
+  transform: scale(0.9);
+}
+
+#btn-attack {
+  bottom: 25px;
+  right: 20px;
+  width: 82px;
+  height: 82px;
+  background: radial-gradient(circle, #FF3B4B, #9E0B18);
+  border: 3px solid #FFD700;
+  color: #FFFFFF;
+  font-size: 13px;
+  box-shadow: 0 0 20px rgba(230, 57, 70, 0.8);
+}
+
+#btn-chakra {
+  bottom: 118px;
+  right: 28px;
+  width: 58px;
+  height: 58px;
+  background: radial-gradient(circle, #00FFFF, #0055AA);
+  border: 2px solid #FFFFFF;
+  color: #040B08;
+  font-size: 10px;
+  box-shadow: 0 0 14px rgba(0, 255, 255, 0.7);
+}
+
+#btn-jump {
+  bottom: 85px;
+  right: 112px;
+  width: 52px;
+  height: 52px;
+  background: rgba(18, 24, 31, 0.88);
+  border: 1.5px solid #D4AF37;
+  color: #F8F9FA;
+  font-size: 11px;
+}
+
+#btn-crouch {
+  bottom: 22px;
+  right: 115px;
+  width: 50px;
+  height: 50px;
+  background: rgba(18, 24, 31, 0.88);
+  border: 1.5px solid #ADB5BD;
+  color: #F8F9FA;
+  font-size: 10px;
+}
+
+#btn-prone {
+  bottom: 12px;
+  right: 172px;
+  width: 48px;
+  height: 48px;
+  background: rgba(18, 24, 31, 0.88);
+  border: 1.5px solid #ADB5BD;
+  color: #F8F9FA;
+  font-size: 10px;
+}
+
+#btn-zoom {
+  bottom: 135px;
+  right: 98px;
+  width: 46px;
+  height: 46px;
+  background: rgba(18, 24, 31, 0.88);
+  border: 1.5px solid #00FFFF;
+  color: #00FFFF;
+  font-size: 10px;
+}
+
+#btn-heal {
+  bottom: 72px;
+  right: 172px;
+  width: 50px;
+  height: 50px;
+  background: rgba(20, 75, 45, 0.9);
+  border: 1.5px solid #2ECC71;
+  color: #2ECC71;
+  font-size: 10px;
+}
+
+/* Modals (Potli, Store, Squad) */
+.modal-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(4, 11, 8, 0.82);
+  z-index: 50;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+
+.modal-backdrop.open {
+  display: flex;
+}
+
+.modal-window {
+  width: 90%;
+  max-width: 680px;
+  max-height: 86vh;
+  background: #0A1C14;
+  border: 2px solid #D4AF37;
+  border-radius: 14px;
+  padding: 18px;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.35);
+  padding-bottom: 10px;
+  margin-bottom: 14px;
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #D4AF37;
+}
+
+.close-btn {
+  background: #E63946;
+  border: none;
+  color: #FFF;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.grid-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
+  gap: 12px;
+}
+
+.item-card {
+  background: rgba(18, 24, 31, 0.9);
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.item-card h4 {
+  color: #FFF2A3;
+  font-size: 14px;
+}
+
+.item-card p {
+  color: #ADB5BD;
+  font-size: 11px;
+}
+
+.action-btn {
+  background: linear-gradient(135deg, #D4AF37, #966F10);
+  color: #040B08;
+  border: none;
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-weight: 800;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.action-btn.secondary {
+  background: linear-gradient(135deg, #00FFFF, #0077AA);
+}
+
+.chat-log {
+  height: 160px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 8px;
+  padding: 10px;
+  overflow-y: auto;
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+
+.chat-input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.chat-input-row input {
+  flex: 1;
+  background: #12181F;
+  border: 1px solid #D4AF37;
+  color: #FFF;
+  padding: 8px;
+  border-radius: 6px;
+}
+
+/* Small screens: scale down panels so nothing overlaps on phones */
+@media (max-width: 420px) {
+  .bars-container { width: 120px; }
+  .quest-box { max-width: 190px; }
+  .icon-btn { font-size: 11px; padding: 6px 9px; }
+}

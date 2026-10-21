@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#040B08" />
+  <title>APP_NAME_HERE</title>
+  <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+</head>
+<body>
+
+  <!-- 3D Realistic WebGL Viewport -->
+  <canvas id="game-canvas"></canvas>
+
+  <!-- Mobile-first HUD -->
+  <div id="hud-overlay">
+
+    <!-- Top Left: Level, HP, XP, Coins, Diamonds, Active Quest -->
+    <div class="top-left-panel hud-interactive">
+      <div class="player-card">
+        <div class="level-badge" id="hud-level">Lv1</div>
+        <div class="bars-container">
+          <div class="player-name-row">
+            <span id="hud-char-name">अर्जुन (साधक)</span>
+            <span id="hud-hp-text">100/100</span>
+          </div>
+          <div class="bar-bg"><div class="hp-fill" id="hud-hp-bar"></div></div>
+          <div class="bar-bg"><div class="xp-fill" id="hud-xp-bar"></div></div>
+        </div>
+      </div>
+
+      <div class="currency-row">
+        <div class="currency-pill coin-text">🪙 कॉइन्स: <span id="hud-coins">12000</span></div>
+        <div class="currency-pill diamond-text">💎 डायमंड्स: <span id="hud-diamonds">5</span></div>
+      </div>
+
+      <div class="quest-box">
+        <div class="quest-title">🌿 कोहरे की घाटी टास्क (Daily Quest)</div>
+        <div id="hud-quest-desc">प्राचीन जड़ी-बूटी और तोरी अवशेष खोजें: <b id="hud-quest-prog">0/3</b></div>
+      </div>
+    </div>
+
+    <!-- Top Right: Mini-map, Store, Squad Chat, Audio Toggle -->
+    <div class="top-right-panel hud-interactive">
+      <div class="top-buttons-col">
+        <button class="icon-btn" id="btn-open-store">🛒 स्टोर / डायमंड एक्सचेंज</button>
+        <button class="icon-btn" id="btn-open-squad">👥 स्क्वाड और टीम चैट</button>
+        <button class="icon-btn" id="btn-toggle-audio">🔊 जंगल ऑडियो: ON</button>
+      </div>
+      <div id="minimap-container">
+        <canvas id="minimap-canvas" width="115" height="115"></canvas>
+        <div class="minimap-label">अमेज़न मिस्टिक रडार (ऑफलाइन)</div>
+      </div>
+    </div>
+
+    <!-- Center Crosshair & Dynamic Notification Banner -->
+    <div id="crosshair"></div>
+    <div id="toast-banner">अमेज़न के रहस्यमयी जंगलों में आपका स्वागत है!</div>
+
+    <!-- Left Controls: Smooth Virtual Joystick & Sprint -->
+    <button id="btn-sprint" class="hud-interactive">⚡ SPRINT</button>
+    <div id="joystick-zone" class="hud-interactive">
+      <div id="joystick-knob"></div>
+    </div>
+
+    <!-- Bottom Center: Potli Inventory & Weapon Switch -->
+    <div class="bottom-center-bar hud-interactive">
+      <button class="potli-btn" id="btn-open-potli">🎒 जादुई पोटली (Inventory)</button>
+      <div class="weapon-slot" id="btn-switch-weapon">
+        ⚔️ <span id="hud-weapon-name">चक्रास्त्र Mk-I</span>
+        <span class="weapon-sub">त्रिशूल-कटाना हाइब्रिड</span>
+      </div>
+    </div>
+
+    <!-- Right Controls: Attack, Chakra Blast, Jump, Crouch, Prone, Zoom, Heal -->
+    <div class="right-combat-cluster hud-interactive">
+      <button class="combat-btn" id="btn-attack">⚔️<br/>हमला</button>
+      <button class="combat-btn" id="btn-chakra">🔱<br/>चक्र प्रहार</button>
+      <button class="combat-btn" id="btn-jump">⬆️<br/>कूदें</button>
+      <button class="combat-btn" id="btn-crouch">🧎<br/>बैठें</button>
+      <button class="combat-btn" id="btn-prone">🛌<br/>लेटें</button>
+      <button class="combat-btn" id="btn-zoom">🔭<br/>ज़ूम</button>
+      <button class="combat-btn" id="btn-heal">🌿<br/>हील (<span id="hud-medkits">3</span>)</button>
+    </div>
+
+  </div>
+
+  <!-- MODAL 1: जादुई पोटली (Inventory, Characters & Weapon Upgrades) -->
+  <div class="modal-backdrop" id="modal-potli">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title">🎒 जादुई पोटली (Characters, Outfits & Chakrastra)</div>
+        <button class="close-btn" data-close="modal-potli">X</button>
+      </div>
+      <p style="font-size:12px; color:#ADB5BD; margin-bottom:12px;">
+        लेवल बढ़ने पर नए शक्तिशाली कैरेक्टर्स और चक्रास्त्र (त्रिशूल-कटाना) के घातक रूप अनलॉक होते हैं।
+      </p>
+      <div class="grid-cards" id="potli-items-grid"></div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: इकॉनमी, डायमंड विनिमय (10,000 Coins = 1 Diamond) और स्टोर -->
+  <div class="modal-backdrop" id="modal-store">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title">💎 मिस्टिक स्टोर और डायमंड एक्सचेंज</div>
+        <button class="close-btn" data-close="modal-store">X</button>
+      </div>
+
+      <div style="background:rgba(212,175,55,0.12); border:1px solid #D4AF37; padding:12px; border-radius:10px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <div>
+          <h4 style="color:#FFF2A3;">🔄 विनिमय प्रणाली (Exchange System)</h4>
+          <p style="font-size:12px; color:#ADB5BD;">10,000 कॉइन्स को 1 डायमंड में बदलें</p>
+        </div>
+        <button class="action-btn" id="btn-exchange-coin">10,000 🪙 ➔ 1 💎 बदलें</button>
+      </div>
+
+      <h4 style="color:#00FFFF; margin-bottom:8px;">✨ प्रीमियम आउटफिट्स और हथियार स्किन्स (Buy with Diamonds)</h4>
+      <div class="grid-cards" id="store-items-grid" style="margin-bottom:16px;"></div>
+
+      <h4 style="color:#FFD700; margin-bottom:8px;">💳 डायरेक्ट इन-ऐप परचेस (Instant Diamond Top-Up)</h4>
+      <div class="grid-cards">
+        <div class="item-card">
+          <h4>💎 10 डायमंड्स पैक</h4>
+          <p>तुरंत प्रीमियम आउटफिट अनलॉक करें</p>
+          <button class="action-btn secondary" data-iap="10">₹89 (Instant Buy)</button>
+        </div>
+        <div class="item-card">
+          <h4>💎 50 डायमंड्स पैक</h4>
+          <p>लेगेंडरी चक्रास्त्र स्किन और आर्मर के लिए</p>
+          <button class="action-btn secondary" data-iap="50">₹399 (Instant Buy)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: ऑफलाइन स्क्वाड चैट (Local Squad Log) -->
+  <div class="modal-backdrop" id="modal-squad">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-title">👥 ऑफलाइन स्क्वाड और रणनीति चैट</div>
+        <button class="close-btn" data-close="modal-squad">X</button>
+      </div>
+      <div style="display:flex; gap:8px; margin-bottom:12px;">
+        <input type="text" id="input-squad-code" value="AMAZON-ALPHA" style="background:#12181F; border:1px solid #D4AF37; color:#FFF; padding:8px; border-radius:6px; flex:1;" />
+        <button class="action-btn" id="btn-join-squad">स्क्वाड जॉइन करें</button>
+      </div>
+      <div class="chat-log" id="squad-chat-log"></div>
+      <div class="chat-input-row">
+        <input type="text" id="input-chat-msg" placeholder="अपनी टीम को संदेश भेजें..." />
+        <button class="action-btn" id="btn-send-chat">भेजें</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
