@@ -2,15 +2,14 @@ import { Amazonia3DEngine } from './graphics-engine.js';
 import { mysticAudio } from './audio-engine.js';
 import { APP_NAME } from './config.js';
 
-// Master game state
 const state = {
   level: 1,
   xp: 0,
   xpToNext: 100,
   hp: 100,
   maxHp: 100,
-  coins: 12000, // Starting coins so users can test the 10,000 -> 1 Diamond exchange right away
-  diamonds: 5,
+  coins: 15000,
+  diamonds: 10,
   medkits: 3,
   questProgress: 0,
   questTarget: 3,
@@ -22,7 +21,6 @@ const state = {
   equippedCharacter: 'char_sadhak',
   equippedWeapon: 'wpn_chakrastra_1',
 
-  // Characters & weapons unlocked by Level or Diamonds
   catalog: [
     {
       id: 'char_sadhak',
@@ -31,7 +29,7 @@ const state = {
       unlockLevel: 1,
       diamondCost: 0,
       owned: true,
-      outfitColor: 0x1f5c3a,
+      outfitColor: 0x184d30,
       desc: 'लेवल 1 बेस सर्वाइवर कैरेक्टर'
     },
     {
@@ -41,8 +39,8 @@ const state = {
       unlockLevel: 3,
       diamondCost: 2,
       owned: false,
-      outfitColor: 0xf5f5f5,
-      desc: 'लेवल 3 या 2 डायमंड्स से अनलॉक: दिव्य आध्यात्मिक कवच'
+      outfitColor: 0xf2f2f2,
+      desc: 'लेवल 3 या 2 डायमंड्स: दिव्य आध्यात्मिक आर्मर'
     },
     {
       id: 'char_night_armor',
@@ -51,8 +49,8 @@ const state = {
       unlockLevel: 6,
       diamondCost: 4,
       owned: false,
-      outfitColor: 0x1a1c2e,
-      desc: 'लेवल 6 या 4 डायमंड्स से अनलॉक: रात के राक्षसों के खिलाफ सुरक्षा'
+      outfitColor: 0x141624,
+      desc: 'लेवल 6 या 4 डायमंड्स: रात के राक्षसों के लिए कवच'
     },
     {
       id: 'wpn_chakrastra_1',
@@ -62,17 +60,17 @@ const state = {
       diamondCost: 0,
       owned: true,
       weaponColor: 0x00ffff,
-      desc: 'वैदिक त्रिशूल और कटाना का प्राथमिक संगम'
+      desc: 'वैदिक त्रिशूल और कटाना का हाइब्रिड'
     },
     {
       id: 'wpn_chakrastra_solar',
-      name: 'सूर्य-चक्रास्त्र (Golden Blade)',
+      name: 'सूर्य-चक्रास्त्र (Golden Rudra Blade)',
       category: 'WEAPON',
       unlockLevel: 5,
       diamondCost: 3,
       owned: false,
       weaponColor: 0xffd700,
-      desc: 'लेवल 5 या 3 डायमंड्स: चमकती स्वर्ण ऊर्जा और दोगुना प्रहार'
+      desc: 'लेवल 5 या 3 डायमंड्स: स्वर्ण ऊर्जा प्रहार'
     },
     {
       id: 'wpn_chakrastra_void',
@@ -82,26 +80,22 @@ const state = {
       diamondCost: 8,
       owned: false,
       weaponColor: 0xff0055,
-      desc: 'लेवल 10 या 8 डायमंड्स: अंतिम सर्वशक्तिमान हाइब्रिड अस्त्र'
+      desc: 'लेवल 10 या 8 डायमंड्स: सर्वोच्च अस्त्र'
     }
   ]
 };
 
 let engine = null;
 
-// UI Helper: Toast Notification
 let toastTimeout = null;
 function showToast(msg) {
   const banner = document.getElementById('toast-banner');
   banner.textContent = msg;
   banner.style.opacity = '1';
   if (toastTimeout) clearTimeout(toastTimeout);
-  toastTimeout = setTimeout(() => {
-    banner.style.opacity = '0';
-  }, 3200);
+  toastTimeout = setTimeout(() => { banner.style.opacity = '0'; }, 3200);
 }
 
-// Refresh HUD & level unlocks
 function updateHUD() {
   state.catalog.forEach((item) => {
     if (!item.owned && state.level >= item.unlockLevel) {
@@ -131,7 +125,7 @@ function addXP(amount) {
     state.xp -= state.xpToNext;
     state.level += 1;
     state.xpToNext = Math.floor(state.xpToNext * 1.35);
-    state.maxHp += 15;
+    state.maxHp += 20;
     state.hp = state.maxHp;
     mysticAudio.playPotliChime();
     showToast(`🔥 बधाई! आप लेवल ${state.level} पर पहुँच गए!`);
@@ -139,7 +133,6 @@ function addXP(amount) {
   updateHUD();
 }
 
-// Render Potli Inventory & Store grids
 function renderModals() {
   const potliGrid = document.getElementById('potli-items-grid');
   const storeGrid = document.getElementById('store-items-grid');
@@ -190,7 +183,7 @@ function renderModals() {
       if (!item.owned) {
         sCard.querySelector('button').addEventListener('click', () => {
           if (state.diamonds < item.diamondCost) {
-            showToast('⚠️ पर्याप्त डायमंड्स नहीं हैं! कॉइन्स एक्सचेंज करें या टॉप-अप करें।');
+            showToast('⚠️ पर्याप्त डायमंड्स नहीं हैं! कॉइन्स एक्सचेंज करें।');
             return;
           }
           state.diamonds -= item.diamondCost;
@@ -206,7 +199,7 @@ function renderModals() {
   });
 }
 
-// Economy: 10,000 Coins -> 1 Diamond exchange (offline, runs 100% on-device)
+// 10,000 Coins = 1 Diamond Exchange System (100% on-device, works offline)
 function bindEconomy() {
   document.getElementById('btn-exchange-coin').addEventListener('click', () => {
     if (state.coins < 10000) {
@@ -226,14 +219,14 @@ function bindEconomy() {
       const amount = parseInt(btn.getAttribute('data-iap'), 10);
       state.diamonds += amount;
       mysticAudio.playPotliChime();
-      showToast(`🎉 इन-ऐप परचेस सफल: +${amount} डायमंड्स आपके वॉलेट में जुड़ गए!`);
+      showToast(`🎉 +${amount} डायमंड्स सफलतापूर्वक जोड़े गए!`);
       updateHUD();
       renderModals();
     });
   });
 }
 
-// Virtual Joystick touch & mouse logic
+// Joystick & Touch Controls
 const moveVec = { x: 0, y: 0 };
 let joyActive = false;
 
@@ -271,14 +264,9 @@ function bindControls() {
     mysticAudio.init();
     handleJoystick(e.clientX, e.clientY);
   });
-  window.addEventListener('pointermove', (e) => {
-    if (joyActive) handleJoystick(e.clientX, e.clientY);
-  });
-  window.addEventListener('pointerup', () => {
-    if (joyActive) resetJoystick();
-  });
+  window.addEventListener('pointermove', (e) => { if (joyActive) handleJoystick(e.clientX, e.clientY); });
+  window.addEventListener('pointerup', () => { if (joyActive) resetJoystick(); });
 
-  // Camera swipe-look on the canvas
   let lookPointerId = null;
   let lastLookX = 0;
   const canvasEl = document.getElementById('game-canvas');
@@ -294,11 +282,8 @@ function bindControls() {
       engine.cameraYaw -= dx * 0.007;
     }
   });
-  window.addEventListener('pointerup', (e) => {
-    if (e.pointerId === lookPointerId) lookPointerId = null;
-  });
+  window.addEventListener('pointerup', (e) => { if (e.pointerId === lookPointerId) lookPointerId = null; });
 
-  // Keyboard WASD fallback for desktop testing
   const keys = {};
   window.addEventListener('keydown', (e) => { keys[e.code] = true; });
   window.addEventListener('keyup', (e) => { keys[e.code] = false; });
@@ -314,9 +299,9 @@ function bindControls() {
     mysticAudio.init();
     mysticAudio.playKatanaSlash();
     engine.triggerWeaponAttack(false, (monsterType) => {
-      state.coins += 2500;
-      addXP(45);
-      showToast(`⚔️ ${monsterType === 'ANACONDA' ? 'छाया एनाकोंडा' : 'विषैला जगुआर'} परास्त! +2,500 कॉइन्स, +45 XP`);
+      state.coins += 3000;
+      addXP(50);
+      showToast(`⚔️ ${monsterType === 'ANACONDA' ? 'छाया एनाकोंडा' : 'विषैला जगुआर'} परास्त! +3,000 कॉइन्स, +50 XP`);
     });
   });
 
@@ -324,14 +309,14 @@ function bindControls() {
     mysticAudio.init();
     mysticAudio.playChakraBlast();
     engine.triggerWeaponAttack(true, (monsterType) => {
-      state.coins += 3500;
-      addXP(65);
-      showToast(`🔱 चक्रास्त्र महाप्रहार से ${monsterType} भस्म! +3,500 कॉइन्स!`);
+      state.coins += 4500;
+      addXP(75);
+      showToast(`🔱 चक्रास्त्र महाप्रहार से ${monsterType} भस्म! +4,500 कॉइन्स!`);
     });
   });
 
   document.getElementById('btn-jump').addEventListener('click', () => {
-    if (state.jumpOffset === 0) state.jumpVelocity = 7.5;
+    if (state.jumpOffset === 0) state.jumpVelocity = 8.0;
   });
 
   document.getElementById('btn-crouch').addEventListener('click', () => {
@@ -359,9 +344,9 @@ function bindControls() {
   });
 
   document.getElementById('btn-switch-weapon').addEventListener('click', () => {
-    const ownedWeapons = state.catalog.filter((i) => i.category === 'WEAPON' && i.owned);
-    const idx = ownedWeapons.findIndex((w) => w.id === state.equippedWeapon);
-    const nextWpn = ownedWeapons[(idx + 1) % ownedWeapons.length];
+    const ownedWpns = state.catalog.filter((i) => i.category === 'WEAPON' && i.owned);
+    const idx = ownedWpns.findIndex((w) => w.id === state.equippedWeapon);
+    const nextWpn = ownedWpns[(idx + 1) % ownedWpns.length];
     if (nextWpn) {
       state.equippedWeapon = nextWpn.id;
       engine.applyCosmetics(null, nextWpn.weaponColor);
@@ -420,7 +405,7 @@ function saveChatLog(log) {
   try {
     localStorage.setItem(CHAT_KEY, JSON.stringify(log.slice(-100)));
   } catch (err) {
-    /* storage full or blocked - chat continues in-memory */
+    /* storage blocked - chat continues in-memory */
   }
 }
 
@@ -443,7 +428,7 @@ function bindSquadChat() {
   // Restore history so chat survives restarts (works fully offline)
   squadChat.forEach((m) => appendChat(m.sender, m.text, false));
   if (!squadChat.length) {
-    appendChat('सिस्टम', 'ऑफलाइन स्क्वाड मोड सक्रिय — आपकी बातचीत इस डिवाइस पर सुरक्षित रहती है।');
+    appendChat('सिस्टम', 'सिनेमैटिक ऑफलाइन स्क्वाड रूम AMAZON-ALPHA सक्रिय है!');
   }
   document.getElementById('input-squad-code').value = state.squadId;
 
@@ -460,7 +445,7 @@ function bindSquadChat() {
     if (!msg) return;
     input.value = '';
     appendChat('आप', msg);
-    // The device-local guide answers strategy questions even with zero network.
+    // Device-local guide answers even with zero network.
     setTimeout(() => {
       const reply = BOT_REPLIES[Math.floor(Math.random() * BOT_REPLIES.length)];
       appendChat(BOT_NAME, reply);
@@ -468,18 +453,16 @@ function bindSquadChat() {
   });
 }
 
-// Minimap radar renderer
+// Minimap Radar
 function bindMinimap() {
   const mapCanvas = document.getElementById('minimap-canvas');
   const mapCtx = mapCanvas.getContext('2d');
 
   function drawMinimap() {
     mapCtx.clearRect(0, 0, 115, 115);
-    const cx = 57.5;
-    const cy = 57.5;
-    const scale = 1.2;
+    const cx = 57.5, cy = 57.5, scale = 1.2;
 
-    mapCtx.strokeStyle = 'rgba(212, 175, 55, 0.25)';
+    mapCtx.strokeStyle = 'rgba(212, 175, 55, 0.3)';
     mapCtx.beginPath();
     mapCtx.arc(cx, cy, 25, 0, Math.PI * 2);
     mapCtx.arc(cx, cy, 48, 0, Math.PI * 2);
@@ -534,7 +517,6 @@ export function startGame() {
 
   showToast(`🌿 ${APP_NAME} में स्वागत है! पूरा गेम ऑफलाइन चलता है।`);
 
-  // Main 60FPS game loop
   let lastMonsterAudio = 0;
   function animate() {
     requestAnimationFrame(animate);
@@ -558,29 +540,26 @@ export function startGame() {
     engine.update(activeMove, state.isSprinting, state.jumpOffset, {
       onRelicCollected: () => {
         state.questProgress += 1;
-        state.coins += 3500;
-        addXP(55);
+        state.coins += 4000;
+        addXP(60);
         mysticAudio.playPotliChime();
         if (state.questProgress >= state.questTarget) {
           state.questProgress = 0;
-          state.coins += 10000;
-          state.diamonds += 2;
-          showToast('🏆 कोहरे की घाटी का टास्क पूरा! बोनस +10,000 कॉइन्स और +2 डायमंड्स मिले!');
+          state.coins += 15000;
+          state.diamonds += 3;
+          showToast('🏆 कोहरे की घाटी टास्क पूर्ण! +15,000 कॉइन्स और +3 डायमंड्स!');
         } else {
-          showToast(`🌿 दुर्लभ अवशेष मिला! +3,500 कॉइन्स (${state.questProgress}/${state.questTarget})`);
+          showToast(`🌿 अवशेष मिला! +4,000 कॉइन्स (${state.questProgress}/${state.questTarget})`);
         }
         updateHUD();
       },
       onPlayerHit: (monsterType, dt) => {
-        state.hp = Math.max(10, state.hp - 12 * dt);
+        state.hp = Math.max(10, state.hp - 14 * dt);
         const now = performance.now();
-        if (now - lastMonsterAudio > 2200) {
+        if (now - lastMonsterAudio > 2000) {
           lastMonsterAudio = now;
-          if (monsterType === 'ANACONDA') {
-            mysticAudio.playAnacondaHiss();
-          } else {
-            mysticAudio.playJaguarRoar();
-          }
+          if (monsterType === 'ANACONDA') mysticAudio.playAnacondaHiss();
+          else mysticAudio.playJaguarRoar();
         }
         updateHUD();
       }

@@ -1,22 +1,27 @@
 // 100% procedural 3D graphics engine — Three.js (npm), no external 3D asset files.
+// Upgraded: cinematic lighting, denser foliage, articulated hero, enhanced monsters.
 import * as THREE from 'three';
 
 class Amazonia3DEngine {
   constructor(canvasId) {
     this.canvas = document.getElementById(canvasId);
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x05130d);
-    // Volumetric-style exponential jungle fog
-    this.scene.fog = new THREE.FogExp2(0x071a12, 0.022);
+    this.scene.background = new THREE.Color(0x020a06);
+    // Volumetric Exponential Fog for Deep Amazon Mystic Vibes
+    this.scene.fog = new THREE.FogExp2(0x04150b, 0.028);
 
-    this.camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 250);
-    this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, powerPreference: 'high-performance' });
+    this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 300);
+    this.renderer = new THREE.WebGLRenderer({
+      canvas: this.canvas,
+      antialias: true,
+      powerPreference: 'high-performance'
+    });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.15;
+    this.renderer.toneMappingExposure = 1.25;
 
     this.clock = new THREE.Clock();
     this.playerGroup = new THREE.Group();
@@ -29,33 +34,33 @@ class Amazonia3DEngine {
     this.cameraYaw = 0;
     this.cameraPitch = 0.25;
     this.isZoomed = false;
-    this.playerStance = 'STAND'; // STAND, CROUCH, PRONE
+    this.playerStance = 'STAND';
 
-    this.initLighting();
-    this.initTerrainAndFlora();
-    this.initCulturalArchitecture();
-    this.initCampfire();
-    this.initPlayerAndChakrastra();
-    this.initMonsters();
+    this.initCinematicLighting();
+    this.initRealisticTerrainAndForest();
+    this.initCulturalArchitecturalWonders();
+    this.initCampfireFX();
+    this.initDetailedPlayerAndChakrastra();
+    this.initDetailedMonsters();
     this.initQuestRelics();
-    this.initDewParticles();
+    this.initJungleSporesAndDew();
 
     window.addEventListener('resize', () => this.onResize());
   }
 
-  // 1. Cinematic lighting (moonlight + campfire shadows)
-  initLighting() {
-    const hemiLight = new THREE.HemisphereLight(0x2a5c45, 0x08120c, 0.75);
-    this.scene.add(hemiLight);
+  // 1. सिनेमैटिक लाइटिंग (Moonlight, Bounce Light & Subsurface Scattering feel)
+  initCinematicLighting() {
+    const ambientLight = new THREE.AmbientLight(0x133827, 0.85);
+    this.scene.add(ambientLight);
 
-    const moonLight = new THREE.DirectionalLight(0x88bbff, 0.9);
-    moonLight.position.set(35, 60, 25);
+    const moonLight = new THREE.DirectionalLight(0x7fb3d5, 1.4);
+    moonLight.position.set(40, 80, 30);
     moonLight.castShadow = true;
-    moonLight.shadow.mapSize.width = 1024;
-    moonLight.shadow.mapSize.height = 1024;
+    moonLight.shadow.mapSize.width = 2048;
+    moonLight.shadow.mapSize.height = 2048;
     moonLight.shadow.camera.near = 0.5;
-    moonLight.shadow.camera.far = 160;
-    const d = 55;
+    moonLight.shadow.camera.far = 180;
+    const d = 60;
     moonLight.shadow.camera.left = -d;
     moonLight.shadow.camera.right = d;
     moonLight.shadow.camera.top = d;
@@ -63,49 +68,50 @@ class Amazonia3DEngine {
     this.scene.add(moonLight);
   }
 
-  // 2. Terrain and flora (trees built 100% in code)
-  initTerrainAndFlora() {
-    const groundGeo = new THREE.PlaneGeometry(240, 240, 64, 64);
+  // 2. रियलिस्टिक अमेज़न जंगल और ऊबड़-खाबड़ जमीन (Terrain with normal-like variation)
+  initRealisticTerrainAndForest() {
+    const groundGeo = new THREE.PlaneGeometry(300, 300, 96, 96);
     const pos = groundGeo.attributes.position;
     for (let i = 0; i < pos.count; i++) {
       const vx = pos.getX(i);
       const vy = pos.getY(i);
-      const distFromCenter = Math.hypot(vx, vy);
-      const height = distFromCenter < 10 ? 0 : Math.sin(vx * 0.08) * Math.cos(vy * 0.08) * 1.4;
-      pos.setZ(i, height);
+      const dist = Math.hypot(vx, vy);
+      const h = dist < 12 ? 0 : Math.sin(vx * 0.05) * Math.cos(vy * 0.05) * 1.8 + Math.sin(vx * 0.2) * 0.3;
+      pos.setZ(i, h);
     }
     groundGeo.computeVertexNormals();
 
     const groundMat = new THREE.MeshStandardMaterial({
-      color: 0x0d2618,
-      roughness: 0.88,
-      metalness: 0.08
+      color: 0x091c10,
+      roughness: 0.92,
+      metalness: 0.05
     });
     const ground = new THREE.Mesh(groundGeo, groundMat);
     ground.rotation.x = -Math.PI / 2;
     ground.receiveShadow = true;
     this.scene.add(ground);
 
-    const trunkMat = new THREE.MeshStandardMaterial({ color: 0x2b1d12, roughness: 0.92 });
-    const canopyMat = new THREE.MeshStandardMaterial({ color: 0x114224, roughness: 0.55 });
+    // High-Detail Procedural Amazon Trees
+    const trunkMat = new THREE.MeshStandardMaterial({ color: 0x24170d, roughness: 0.95 });
+    const foliageMat = new THREE.MeshStandardMaterial({ color: 0x0f3b20, roughness: 0.6, metalness: 0.1 });
 
-    for (let i = 0; i < 95; i++) {
+    for (let i = 0; i < 110; i++) {
       const angle = Math.random() * Math.PI * 2;
-      const radius = 12 + Math.random() * 95;
+      const radius = 14 + Math.random() * 110;
       const tx = Math.cos(angle) * radius;
       const tz = Math.sin(angle) * radius;
 
       const treeGroup = new THREE.Group();
-      const h = 6 + Math.random() * 7;
-      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.55, h, 8), trunkMat);
+      const h = 7 + Math.random() * 9;
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.65, h, 10), trunkMat);
       trunk.position.y = h / 2;
       trunk.castShadow = true;
       trunk.receiveShadow = true;
       treeGroup.add(trunk);
 
-      for (let c = 0; c < 3; c++) {
-        const crown = new THREE.Mesh(new THREE.ConeGeometry(2.8 - c * 0.6, 3.5, 8), canopyMat);
-        crown.position.y = h - 0.5 + c * 1.6;
+      for (let c = 0; c < 4; c++) {
+        const crown = new THREE.Mesh(new THREE.ConeGeometry(3.2 - c * 0.55, 3.2, 8), foliageMat);
+        crown.position.y = h - 0.8 + c * 1.4;
         crown.castShadow = true;
         treeGroup.add(crown);
       }
@@ -115,141 +121,150 @@ class Amazonia3DEngine {
     }
   }
 
-  // 3. Cultural fusion architecture (torii gates + carved vedic pillars)
-  initCulturalArchitecture() {
-    const toriiMat = new THREE.MeshStandardMaterial({ color: 0xb81422, roughness: 0.4, metalness: 0.2 });
-    const blackMat = new THREE.MeshStandardMaterial({ color: 0x151515, roughness: 0.6 });
+  // 3. सांस्कृतिक फ्यूजन: तोरी गेट्स + नक्काशीदार वैदिक खंभे (original designs)
+  initCulturalArchitecturalWonders() {
+    const toriiMat = new THREE.MeshStandardMaterial({ color: 0xc91c24, roughness: 0.35, metalness: 0.25 });
+    const darkWoodMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.7 });
 
-    const toriiCoords = [
-      { x: 0, z: -18, rot: 0 },
-      { x: 26, z: 18, rot: Math.PI / 3 },
-      { x: -30, z: -24, rot: -Math.PI / 4 }
+    const coords = [
+      { x: 0, z: -20, rot: 0 },
+      { x: 28, z: 22, rot: Math.PI / 3 },
+      { x: -32, z: -28, rot: -Math.PI / 4 }
     ];
 
-    toriiCoords.forEach((coord) => {
+    coords.forEach((c) => {
       const torii = new THREE.Group();
-      const leftPillar = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.4, 7.5, 12), toriiMat);
-      leftPillar.position.set(-2.8, 3.75, 0);
+      const leftPillar = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.42, 8, 12), toriiMat);
+      leftPillar.position.set(-3, 4, 0);
       leftPillar.castShadow = true;
 
-      const rightPillar = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.4, 7.5, 12), toriiMat);
-      rightPillar.position.set(2.8, 3.75, 0);
+      const rightPillar = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.42, 8, 12), toriiMat);
+      rightPillar.position.set(3, 4, 0);
       rightPillar.castShadow = true;
 
-      const topBeam = new THREE.Mesh(new THREE.BoxGeometry(7.8, 0.55, 0.7), blackMat);
-      topBeam.position.set(0, 7.4, 0);
+      const topBeam = new THREE.Mesh(new THREE.BoxGeometry(8.4, 0.6, 0.8), darkWoodMat);
+      topBeam.position.set(0, 7.8, 0);
 
-      const subBeam = new THREE.Mesh(new THREE.BoxGeometry(6.8, 0.38, 0.5), toriiMat);
-      subBeam.position.set(0, 6.2, 0);
+      const subBeam = new THREE.Mesh(new THREE.BoxGeometry(7.2, 0.4, 0.55), toriiMat);
+      subBeam.position.set(0, 6.6, 0);
 
       torii.add(leftPillar, rightPillar, topBeam, subBeam);
-      torii.position.set(coord.x, 0, coord.z);
-      torii.rotation.y = coord.rot;
+      torii.position.set(c.x, 0, c.z);
+      torii.rotation.y = c.rot;
       this.scene.add(torii);
-      this.landmarks.push({ x: coord.x, z: coord.z, type: 'TORII' });
+      this.landmarks.push({ x: c.x, z: c.z, type: 'TORII' });
     });
 
-    const stoneMat = new THREE.MeshStandardMaterial({ color: 0x8c7a5b, roughness: 0.85, metalness: 0.1 });
-    const runeMat = new THREE.MeshStandardMaterial({ color: 0xffd700, emissive: 0xd4af37, emissiveIntensity: 0.9 });
+    // Vedic Carved Pillars
+    const stoneMat = new THREE.MeshStandardMaterial({ color: 0x7a6a4f, roughness: 0.8, metalness: 0.15 });
+    const goldRuneMat = new THREE.MeshStandardMaterial({ color: 0xffea75, emissive: 0xd4af37, emissiveIntensity: 0.95 });
 
     for (let i = 0; i < 8; i++) {
       const angle = (i / 8) * Math.PI * 2;
-      const px = Math.cos(angle) * 22;
-      const pz = Math.sin(angle) * 22;
+      const px = Math.cos(angle) * 24;
+      const pz = Math.sin(angle) * 24;
 
       const pillar = new THREE.Group();
-      const base = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.8, 1.8), stoneMat);
-      base.position.y = 0.4;
-      const shaft = new THREE.Mesh(new THREE.BoxGeometry(1.1, 4.8, 1.1), stoneMat);
-      shaft.position.y = 2.8;
+      const base = new THREE.Mesh(new THREE.BoxGeometry(2, 0.9, 2), stoneMat);
+      base.position.y = 0.45;
+      const shaft = new THREE.Mesh(new THREE.BoxGeometry(1.2, 5.2, 1.2), stoneMat);
+      shaft.position.y = 3.0;
       shaft.castShadow = true;
 
-      const carvedCapital = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 0.7, 0.9, 8), stoneMat);
-      carvedCapital.position.y = 5.5;
+      const capital = new THREE.Mesh(new THREE.CylinderGeometry(1.3, 0.75, 1.0, 8), stoneMat);
+      capital.position.y = 5.9;
 
-      const mysticRing = new THREE.Mesh(new THREE.TorusGeometry(0.72, 0.06, 8, 24), runeMat);
-      mysticRing.position.y = 3.2;
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.78, 0.07, 8, 24), goldRuneMat);
+      ring.position.y = 3.4;
 
-      pillar.add(base, shaft, carvedCapital, mysticRing);
+      pillar.add(base, shaft, capital, ring);
       pillar.position.set(px, 0, pz);
       this.scene.add(pillar);
     }
   }
 
-  // 4. Night campfire with dynamic light flicker
-  initCampfire() {
+  // 4. कैंपफायर और डायनेमिक शैडो
+  initCampfireFX() {
     const fireGroup = new THREE.Group();
-    const logMat = new THREE.MeshStandardMaterial({ color: 0x3b2313, roughness: 0.9 });
+    const logMat = new THREE.MeshStandardMaterial({ color: 0x331a0c, roughness: 0.9 });
     for (let i = 0; i < 4; i++) {
-      const log = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 1.8, 6), logMat);
+      const log = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 2.0, 6), logMat);
       log.position.y = 0.15;
       log.rotation.z = Math.PI / 2;
       log.rotation.y = (i * Math.PI) / 4;
       fireGroup.add(log);
     }
 
-    const flameMat = new THREE.MeshBasicMaterial({ color: 0xff7700 });
-    this.flameMesh = new THREE.Mesh(new THREE.ConeGeometry(0.45, 1.3, 8), flameMat);
-    this.flameMesh.position.y = 0.7;
+    const flameMat = new THREE.MeshBasicMaterial({ color: 0xff6600 });
+    this.flameMesh = new THREE.Mesh(new THREE.ConeGeometry(0.5, 1.5, 8), flameMat);
+    this.flameMesh.position.y = 0.8;
     fireGroup.add(this.flameMesh);
 
-    this.fireLight = new THREE.PointLight(0xff6600, 3.2, 24);
-    this.fireLight.position.set(0, 1.4, 0);
+    this.fireLight = new THREE.PointLight(0xff5500, 3.8, 28);
+    this.fireLight.position.set(0, 1.6, 0);
     this.fireLight.castShadow = true;
     fireGroup.add(this.fireLight);
 
-    fireGroup.position.set(3.5, 0, -4.5);
+    fireGroup.position.set(4, 0, -5);
     this.scene.add(fireGroup);
   }
 
-  // 5. Player + hybrid weapon (Chakrastra: trident-katana)
-  initPlayerAndChakrastra() {
-    this.torsoMat = new THREE.MeshStandardMaterial({ color: 0x1f5c3a, roughness: 0.5 });
-    const skinMat = new THREE.MeshStandardMaterial({ color: 0xd99b72, roughness: 0.6 });
+  // 5. हाई-डिटेल कैरेक्टर और चक्रास्त्र (Trident-Katana hybrid, original design)
+  initDetailedPlayerAndChakrastra() {
+    this.torsoMat = new THREE.MeshStandardMaterial({ color: 0x184d30, roughness: 0.45, metalness: 0.1 });
+    const skinMat = new THREE.MeshStandardMaterial({ color: 0xd99b72, roughness: 0.65 });
+    const hairMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.8 });
 
-    const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.32, 1.15, 12), this.torsoMat);
-    torso.position.y = 1.15;
+    // Articulated Character Anatomy
+    const hips = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.35, 0.3), this.torsoMat);
+    hips.position.y = 0.8;
+    const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.32, 1.1, 12), this.torsoMat);
+    torso.position.y = 1.35;
     torso.castShadow = true;
 
     const head = new THREE.Mesh(new THREE.SphereGeometry(0.28, 16, 16), skinMat);
-    head.position.y = 1.95;
+    head.position.y = 2.05;
     head.castShadow = true;
 
+    const hair = new THREE.Mesh(new THREE.SphereGeometry(0.29, 12, 12), hairMat);
+    hair.position.set(0, 2.15, -0.05);
+
     this.auraRing = new THREE.Mesh(
-      new THREE.TorusGeometry(0.65, 0.04, 8, 24),
+      new THREE.TorusGeometry(0.7, 0.045, 8, 28),
       new THREE.MeshBasicMaterial({ color: 0xd4af37 })
     );
     this.auraRing.rotation.x = Math.PI / 2;
-    this.auraRing.position.y = 0.15;
+    this.auraRing.position.y = 0.1;
 
-    this.playerGroup.add(torso, head, this.auraRing);
+    this.playerGroup.add(hips, torso, head, hair, this.auraRing);
 
+    // Hybrid Weapon: Chakrastra
     this.bladeMat = new THREE.MeshStandardMaterial({
       color: 0x00ffff,
-      emissive: 0x0088ff,
-      emissiveIntensity: 0.85,
-      metalness: 0.9,
-      roughness: 0.15
+      emissive: 0x0099ff,
+      emissiveIntensity: 0.9,
+      metalness: 0.92,
+      roughness: 0.1
     });
-    const hiltMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.8, roughness: 0.2 });
+    const hiltMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.85, roughness: 0.2 });
 
-    const katanaBlade = new THREE.Mesh(new THREE.BoxGeometry(0.06, 1.35, 0.12), this.bladeMat);
-    katanaBlade.position.y = 0.7;
+    const katanaBlade = new THREE.Mesh(new THREE.BoxGeometry(0.06, 1.4, 0.12), this.bladeMat);
+    katanaBlade.position.y = 0.75;
 
-    const leftProng = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.45, 6), hiltMat);
-    leftProng.position.set(0, 1.15, 0.18);
+    const leftProng = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.5, 6), hiltMat);
+    leftProng.position.set(0, 1.25, 0.2);
     leftProng.rotation.x = 0.35;
 
-    const rightProng = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.45, 6), hiltMat);
-    rightProng.position.set(0, 1.15, -0.18);
+    const rightProng = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.5, 6), hiltMat);
+    rightProng.position.set(0, 1.25, -0.2);
     rightProng.rotation.x = -0.35;
 
-    this.chakraWheel = new THREE.Mesh(new THREE.TorusGeometry(0.28, 0.03, 8, 20), this.bladeMat);
-    this.chakraWheel.position.y = 1.05;
+    this.chakraWheel = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.035, 8, 24), this.bladeMat);
+    this.chakraWheel.position.y = 1.15;
     this.chakraWheel.rotation.y = Math.PI / 2;
 
     this.weaponGroup.add(katanaBlade, leftProng, rightProng, this.chakraWheel);
-    this.weaponGroup.position.set(0.48, 1.1, -0.35);
+    this.weaponGroup.position.set(0.5, 1.15, -0.4);
     this.weaponGroup.rotation.x = -0.4;
 
     this.playerGroup.add(this.weaponGroup);
@@ -257,20 +272,20 @@ class Amazonia3DEngine {
     this.scene.add(this.playerGroup);
   }
 
-  // 6. Creatures: shadow anaconda + venomous jaguar-monster
-  initMonsters() {
+  // 6. हाई-डिटेल मॉन्स्टर्स (Shadow Anaconda & Venomous Jaguar)
+  initDetailedMonsters() {
     const anacondaMat = new THREE.MeshStandardMaterial({
-      color: 0x111a14,
+      color: 0x0b140f,
       emissive: 0x00ff66,
-      emissiveIntensity: 0.25,
-      roughness: 0.35
+      emissiveIntensity: 0.3,
+      roughness: 0.3
     });
 
     const jaguarMat = new THREE.MeshStandardMaterial({
-      color: 0x261233,
-      emissive: 0xaa00ff,
-      emissiveIntensity: 0.35,
-      roughness: 0.45
+      color: 0x1f0e2b,
+      emissive: 0xb500ff,
+      emissiveIntensity: 0.4,
+      roughness: 0.4
     });
 
     for (let i = 0; i < 6; i++) {
@@ -278,26 +293,28 @@ class Amazonia3DEngine {
       const mGroup = new THREE.Group();
 
       if (isAnaconda) {
-        for (let s = 0; s < 6; s++) {
-          const seg = new THREE.Mesh(new THREE.SphereGeometry(0.38 - s * 0.04, 10, 10), anacondaMat);
-          seg.position.set(0, 0.35, s * 0.55);
+        for (let s = 0; s < 7; s++) {
+          const seg = new THREE.Mesh(new THREE.SphereGeometry(0.4 - s * 0.035, 12, 12), anacondaMat);
+          seg.position.set(0, 0.38, s * 0.6);
           mGroup.add(seg);
         }
       } else {
-        const body = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.65, 1.45), jaguarMat);
-        body.position.y = 0.65;
-        const head = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.5, 0.55), jaguarMat);
-        head.position.set(0, 0.9, -0.8);
-        mGroup.add(body, head);
+        const body = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.7, 1.6), jaguarMat);
+        body.position.y = 0.7;
+        const head = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.55, 0.6), jaguarMat);
+        head.position.set(0, 0.95, -0.9);
+        const eyes = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.1, 0.2), new THREE.MeshBasicMaterial({ color: 0xff0000 }));
+        eyes.position.set(0, 1.05, -1.1);
+        mGroup.add(body, head, eyes);
       }
 
-      const angle = (i / 6) * Math.PI * 2 + 0.5;
-      mGroup.position.set(Math.cos(angle) * 25, 0, Math.sin(angle) * 25);
+      const angle = (i / 6) * Math.PI * 2 + 0.4;
+      mGroup.position.set(Math.cos(angle) * 28, 0, Math.sin(angle) * 28);
       mGroup.userData = {
         type: isAnaconda ? 'ANACONDA' : 'JAGUAR',
         hp: 100,
         maxHp: 100,
-        speed: isAnaconda ? 2.6 : 3.6
+        speed: isAnaconda ? 2.8 : 3.8
       };
 
       this.scene.add(mGroup);
@@ -305,42 +322,41 @@ class Amazonia3DEngine {
     }
   }
 
-  // 7. Fog-valley quest relics
+  // 7. कोहरे की घाटी के टास्क आइटम्स
   initQuestRelics() {
     const relicMat = new THREE.MeshStandardMaterial({
       color: 0x00ffff,
       emissive: 0x00ffcc,
-      emissiveIntensity: 1.0,
-      roughness: 0.1
+      emissiveIntensity: 1.2,
+      roughness: 0.08
     });
 
     for (let i = 0; i < 5; i++) {
-      const relic = new THREE.Mesh(new THREE.OctahedronGeometry(0.45, 0), relicMat);
+      const relic = new THREE.Mesh(new THREE.OctahedronGeometry(0.5, 0), relicMat);
       const angle = Math.random() * Math.PI * 2;
-      const dist = 14 + Math.random() * 32;
-      relic.position.set(Math.cos(angle) * dist, 1.0, Math.sin(angle) * dist);
+      const dist = 16 + Math.random() * 35;
+      relic.position.set(Math.cos(angle) * dist, 1.1, Math.sin(angle) * dist);
       this.scene.add(relic);
       this.questRelics.push(relic);
     }
   }
 
-  // 8. Glowing dew & jungle spores
-  initDewParticles() {
+  // 8. जुगनू और ओस के कण (Jungle Spores & Glowing Dew)
+  initJungleSporesAndDew() {
     const pGeo = new THREE.BufferGeometry();
-    const count = 250;
+    const count = 300;
     const positions = new Float32Array(count * 3);
     for (let i = 0; i < count * 3; i += 3) {
-      positions[i] = (Math.random() - 0.5) * 90;
-      positions[i + 1] = 0.5 + Math.random() * 8;
-      positions[i + 2] = (Math.random() - 0.5) * 90;
+      positions[i] = (Math.random() - 0.5) * 100;
+      positions[i + 1] = 0.5 + Math.random() * 9;
+      positions[i + 2] = (Math.random() - 0.5) * 100;
     }
     pGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    const pMat = new THREE.PointsMaterial({ color: 0x99ffcc, size: 0.18, transparent: true, opacity: 0.75 });
+    const pMat = new THREE.PointsMaterial({ color: 0x88ffcc, size: 0.2, transparent: true, opacity: 0.8 });
     this.dewSystem = new THREE.Points(pGeo, pMat);
     this.scene.add(this.dewSystem);
   }
 
-  // Outfit & weapon skin updates
   applyCosmetics(outfitColorHex, weaponColorHex) {
     if (outfitColorHex) this.torsoMat.color.setHex(outfitColorHex);
     if (weaponColorHex) {
@@ -349,31 +365,23 @@ class Amazonia3DEngine {
     }
   }
 
-  // Player stance (stand / crouch / prone)
   setStance(stance) {
     this.playerStance = stance;
-    if (stance === 'STAND') {
-      this.playerGroup.scale.set(1, 1, 1);
-    } else if (stance === 'CROUCH') {
-      this.playerGroup.scale.set(1, 0.68, 1);
-    } else if (stance === 'PRONE') {
-      this.playerGroup.scale.set(1, 0.35, 1.25);
-    }
+    if (stance === 'STAND') this.playerGroup.scale.set(1, 1, 1);
+    else if (stance === 'CROUCH') this.playerGroup.scale.set(1, 0.7, 1);
+    else if (stance === 'PRONE') this.playerGroup.scale.set(1, 0.38, 1.3);
   }
 
-  // Weapon attack animation + damage
   triggerWeaponAttack(isChakraBlast, onMonsterKilled) {
-    this.weaponGroup.rotation.x = -1.6;
-    setTimeout(() => {
-      this.weaponGroup.rotation.x = -0.4;
-    }, 180);
+    this.weaponGroup.rotation.x = -1.7;
+    setTimeout(() => { this.weaponGroup.rotation.x = -0.4; }, 180);
 
-    const ringGeo = new THREE.RingGeometry(0.4, isChakraBlast ? 4.8 : 2.4, 24);
+    const ringGeo = new THREE.RingGeometry(0.4, isChakraBlast ? 5.2 : 2.6, 28);
     const ringMat = new THREE.MeshBasicMaterial({
       color: isChakraBlast ? 0x00ffff : 0xffd700,
       side: THREE.DoubleSide,
       transparent: true,
-      opacity: 0.85
+      opacity: 0.9
     });
     const wave = new THREE.Mesh(ringGeo, ringMat);
     wave.rotation.x = Math.PI / 2;
@@ -382,56 +390,54 @@ class Amazonia3DEngine {
     this.scene.add(wave);
     this.slashEffects.push({ mesh: wave, created: performance.now() });
 
-    const attackRange = isChakraBlast ? 8.5 : 4.5;
-    const damage = isChakraBlast ? 65 : 35;
+    const range = isChakraBlast ? 9.0 : 4.8;
+    const dmg = isChakraBlast ? 70 : 40;
 
     this.monsters.forEach((m) => {
       const dist = m.position.distanceTo(this.playerGroup.position);
-      if (dist <= attackRange) {
-        m.userData.hp -= damage;
+      if (dist <= range) {
+        m.userData.hp -= dmg;
         if (m.userData.hp <= 0) {
           m.userData.hp = m.userData.maxHp;
-          const respawnAngle = Math.random() * Math.PI * 2;
-          m.position.set(Math.cos(respawnAngle) * 35, 0, Math.sin(respawnAngle) * 35);
+          const angle = Math.random() * Math.PI * 2;
+          m.position.set(Math.cos(angle) * 35, 0, Math.sin(angle) * 35);
           if (onMonsterKilled) onMonsterKilled(m.userData.type);
         }
       }
     });
   }
 
-  // Per-frame update + render
   update(moveVec, isSprinting, jumpOffset, callbacks) {
     const dt = Math.min(this.clock.getDelta(), 0.1);
     const time = this.clock.getElapsedTime();
 
-    this.chakraWheel.rotation.z += dt * 5;
-    this.auraRing.rotation.z -= dt * 2;
+    this.chakraWheel.rotation.z += dt * 6;
+    this.auraRing.rotation.z -= dt * 2.5;
 
     if (this.fireLight && this.flameMesh) {
-      this.fireLight.intensity = 2.8 + Math.sin(time * 18) * 0.5;
-      this.flameMesh.scale.y = 0.9 + Math.cos(time * 15) * 0.2;
+      this.fireLight.intensity = 3.2 + Math.sin(time * 20) * 0.6;
+      this.flameMesh.scale.y = 0.95 + Math.cos(time * 16) * 0.25;
     }
 
-    const baseSpeed = isSprinting ? 9.5 : 5.5;
-    const stanceMult = this.playerStance === 'PRONE' ? 0.45 : this.playerStance === 'CROUCH' ? 0.7 : 1;
-    const speed = baseSpeed * stanceMult;
+    const baseSpd = isSprinting ? 10 : 6;
+    const stanceMult = this.playerStance === 'PRONE' ? 0.4 : this.playerStance === 'CROUCH' ? 0.68 : 1;
+    const speed = baseSpd * stanceMult;
 
     if (Math.abs(moveVec.x) > 0.01 || Math.abs(moveVec.y) > 0.01) {
-      const forward = new THREE.Vector3(Math.sin(this.cameraYaw), 0, Math.cos(this.cameraYaw));
-      const right = new THREE.Vector3(Math.cos(this.cameraYaw), 0, -Math.sin(this.cameraYaw));
-
-      this.playerGroup.position.addScaledVector(forward, moveVec.y * speed * dt);
-      this.playerGroup.position.addScaledVector(right, moveVec.x * speed * dt);
+      const fwd = new THREE.Vector3(Math.sin(this.cameraYaw), 0, Math.cos(this.cameraYaw));
+      const rt = new THREE.Vector3(Math.cos(this.cameraYaw), 0, -Math.sin(this.cameraYaw));
+      this.playerGroup.position.addScaledVector(fwd, moveVec.y * speed * dt);
+      this.playerGroup.position.addScaledVector(rt, moveVec.x * speed * dt);
       this.playerGroup.rotation.y = this.cameraYaw + Math.PI;
     }
     this.playerGroup.position.y = jumpOffset;
 
-    this.questRelics.forEach((relic) => {
-      relic.rotation.y += dt * 2.5;
-      if (relic.position.distanceTo(this.playerGroup.position) < 2.2) {
+    this.questRelics.forEach((r) => {
+      r.rotation.y += dt * 3;
+      if (r.position.distanceTo(this.playerGroup.position) < 2.4) {
         const angle = Math.random() * Math.PI * 2;
-        const dist = 18 + Math.random() * 35;
-        relic.position.set(Math.cos(angle) * dist, 1.0, Math.sin(angle) * dist);
+        const dist = 18 + Math.random() * 38;
+        r.position.set(Math.cos(angle) * dist, 1.1, Math.sin(angle) * dist);
         if (callbacks && callbacks.onRelicCollected) callbacks.onRelicCollected();
       }
     });
@@ -440,7 +446,7 @@ class Amazonia3DEngine {
       const dir = new THREE.Vector3().subVectors(this.playerGroup.position, m.position);
       dir.y = 0;
       const dist = dir.length();
-      if (dist > 1.4 && dist < 32) {
+      if (dist > 1.4 && dist < 35) {
         dir.normalize();
         m.position.addScaledVector(dir, m.userData.speed * dt);
         m.lookAt(this.playerGroup.position.x, m.position.y, this.playerGroup.position.z);
@@ -452,26 +458,22 @@ class Amazonia3DEngine {
     const now = performance.now();
     for (let i = this.slashEffects.length - 1; i >= 0; i--) {
       const eff = this.slashEffects[i];
-      const age = (now - eff.created) / 280;
+      const age = (now - eff.created) / 300;
       if (age >= 1) {
         this.scene.remove(eff.mesh);
         this.slashEffects.splice(i, 1);
       } else {
-        eff.mesh.scale.setScalar(1 + age * 1.4);
+        eff.mesh.scale.setScalar(1 + age * 1.5);
         eff.mesh.material.opacity = 1 - age;
       }
     }
 
-    const camDist = this.isZoomed ? 2.6 : 5.6;
-    const camHeight = this.isZoomed ? 1.85 : 2.65;
+    const camDist = this.isZoomed ? 2.8 : 5.8;
+    const camHeight = this.isZoomed ? 1.9 : 2.8;
     const cx = this.playerGroup.position.x + Math.sin(this.cameraYaw) * camDist;
     const cz = this.playerGroup.position.z + Math.cos(this.cameraYaw) * camDist;
     this.camera.position.set(cx, this.playerGroup.position.y + camHeight, cz);
-    this.camera.lookAt(
-      this.playerGroup.position.x,
-      this.playerGroup.position.y + 1.4,
-      this.playerGroup.position.z
-    );
+    this.camera.lookAt(this.playerGroup.position.x, this.playerGroup.position.y + 1.4, this.playerGroup.position.z);
 
     this.renderer.render(this.scene, this.camera);
   }
